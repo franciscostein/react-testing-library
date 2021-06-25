@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import { useOrderDetails } from '../../contexts/OrderDetails';
+import AlertBanner from '../common/AlertBanner';
 
-export default function OrderConfirmation() {
-    const [orderNumber, setOrderNumber] = useState('');
+export default function OrderConfirmation({ setOrderPhase }) {
+    const [orderNumber, setOrderNumber] = useState(null);
     const [error, setError] = useState(false);
+    const [, , resetOrder] = useOrderDetails();
 
     useEffect(() => {
         axios.post('http://localhost:3030/order')
@@ -13,24 +15,30 @@ export default function OrderConfirmation() {
         .catch(() => setError(true));
     }, []);
 
-    let screen = <h1>Loading...</h1>;
-
     if (error) {
-        screen = <h1>Error, something went wrong! Please try again</h1>;
-    } else if (orderNumber) {
-        screen = (
-            <Form>
-                <h1>Thank you!</h1>
-                <h2>Your order number is {orderNumber}</h2>
-                <h3>as per our terms and conditions, nothing will happen now</h3>
-                <Button>
-                    Create new order
-                </Button>
-            </Form>
-        );
+      return <AlertBanner />;
     }
 
-    return (
-        {screen}
-    );
+    const handleClick = () => {
+        // clear the order details
+        resetOrder();
+
+        // send back to order page
+        setOrderPhase('inProgress');
+    }
+
+    if (orderNumber) {
+      return (
+            <div style={{ textAlign: 'center' }}>
+                <h1>Thank You!</h1>
+                <p>Your order number is {orderNumber}</p>
+                <p style={{ fontSize: '25%' }}>
+                    as per our terms and conditions, nothing will happen now
+                </p>
+                <Button onClick={handleClick}>Create new order</Button>
+            </div>
+      );
+    } else {
+        return <div>Loading</div>;
+    }
 }
